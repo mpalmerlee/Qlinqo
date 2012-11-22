@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Qlinqo - HTML5 Game</title>
+<script type="text/javascript" src="Box2dWeb-2.1.a.3.min.js"></script>
+<script type="text/javascript" src="js-inherit.js"></script>
+<script type="text/javascript" src="Stratiscape.js"></script>
+<script type="text/javascript" src="qlinqo.js"></script>
+<script type="text/javascript" src="sfx-interface.js"></script>
+<script type="text/javascript" src="Stats.js"></script>
+<script type="text/javascript" src="fireworks.js"></script>
+<script type="text/javascript">
+
+function qlinqoPlayAreaClicked(pos) {
+	//console.log('canvas clicked ('+ pos.x +','+ pos.y +')');
+	
+	//add a play piece to the playfield
+	Qlinqo.newGamePiece(pos.x, pos.y);
+}
+
+function qlinqoGameOverClicked(pos) {
+	if(Qlinqo.ballsScored == 5) {
+		FW.StopRandomBlasts();
+		Qlinqo.gameOverLayer.children[0].fadeAway();
+		Qlinqo.startOver();
+	}
+}
+
+function setupQlinqo() {
+
+	//stats.js
+	//https://github.com/mrdoob/stats.js
+	if(Qlinqo.addStats)
+	{
+		document.stats = new Stats();
+
+		// Align top-left
+		document.stats.getDomElement().style.position = 'absolute';
+		document.stats.getDomElement().style.left = '0px';
+		document.stats.getDomElement().style.top = '0px';
+
+		document.body.appendChild( document.stats.getDomElement() );
+	}
+
+	document.StratiscapeDraw = new Stratiscape({'containerId':'canvasContainer',
+								'layers':[
+									{'name':'canvasQlinqoBackground', x:0, y:0, width:480, height:640,'zIndex':1, 'backgroundColor':'black'},
+									{'name':'canvasQlinqoPlayfield', x:0, y:0, width:480, height:640,'zIndex':2},
+									{'name':'canvasQlinqoMouseHit', x:0, y:0, width:480, height:80,'zIndex':3, 'clickCallback':qlinqoPlayAreaClicked, 'mouseHitId':'canvasMouseHitDetector'},
+									{'name':'canvasQlinqoForeground', x:0, y:0, width:480, height:640,'zIndex':4},
+									{'name':'canvasQlinqoBox2dDebug', x:0, y:0, width:480, height:640,'zIndex':5},
+									{'name':'canvasQlinqoStatus', x:0, y:0, width:480, height:640,'zIndex':6},
+									{'name':'canvasQlinqoGameOver', x:180, y:240, width:120, height:160,'zIndex':7, 'clickCallback':qlinqoGameOverClicked, 'mouseHitId':'canvasGameOverHitDetector'},
+									{'name':'canvasFWForeground', x:0, y:0, width:480, height:640,'zIndex':8}
+								]
+							});
+	if(document.StratiscapeDraw.canvasSupported)
+	{
+		var playfieldLayer = document.StratiscapeDraw.getLayer('canvasQlinqoPlayfield');
+		var foregroundLayer = document.StratiscapeDraw.getLayer('canvasQlinqoForeground');
+		var backgroundLayer = document.StratiscapeDraw.getLayer('canvasQlinqoBackground');
+		var debugLayer = document.StratiscapeDraw.getLayer('canvasQlinqoBox2dDebug');
+		var statusLayer = document.StratiscapeDraw.getLayer('canvasQlinqoStatus');
+		var gameOverLayer = document.StratiscapeDraw.getLayer('canvasQlinqoGameOver');
+		
+		//scale our canvas layers to better match screen resolution
+		//http://blogs.msdn.com/b/davrous/archive/2012/04/06/modernizing-your-html5-canvas-games-with-offline-apis-file-apis-css3-amp-hardware-scaling.aspx
+		document.StratiscapeDraw.scaleLayers(
+						{
+							'mainWidth':Qlinqo.width
+							, 'mainHeight':Qlinqo.height
+							, 'paddingWidth':40
+							, 'paddingHeight':70
+							, 'ratioTolerance': 0.02
+							, 'additionalElementIds':['pageContainer','outerDiv']
+						});
+		
+		Qlinqo.Setup(playfieldLayer, foregroundLayer, backgroundLayer, debugLayer, statusLayer, gameOverLayer);
+		
+		FW.Setup(document.StratiscapeDraw.getLayer('canvasFWForeground'));
+
+	} else {
+		$('#canvasContainer').html('<p style="color:red">Bummer! Your browser does not support the HTML 5 Canvas Tag!</p>');
+	}
+	
+	/*
+	//this is for testing lots of balls
+	document.gamePieceCount = 0;
+	setInterval(function() {
+		if(document.gamePieceCount < 100) {
+			//create a game piece
+			Qlinqo.newGamePiece(Math.random() * Qlinqo.width, Math.random() * 1);
+			document.gamePieceCount++;
+		}
+	}, 200);*/
+	
+	
+	//window.addEventListener("resize", scaleLayers, false);
+}
+
+</script>
+<style type="text/css">
+
+* {
+	margin: 0;
+	padding: 0;
+}
+html {
+	height: 100%;
+	width: 100%
+}
+body {
+	height: 100%;
+	width: 100%;
+	background-color: #000;
+	color:#FFF;
+
+	/*  Webkit */
+	display: -webkit-box;
+	-webkit-box-orient: horizontal;
+	-webkit-box-pack: center;
+	-webkit-box-align: center;
+	
+	/*  Mozilla */
+	display: -moz-box;
+	-moz-box-orient: horizontal;
+	-moz-box-pack: center;
+	-moz-box-align: center;
+	
+	/*  Standard */
+	display: box;
+	box-orient: horizontal;
+	box-pack: center;
+	box-align: center;
+	
+	
+	/*
+	box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-ms-box-sizing: border-box;
+	*/
+	
+	/*font-family: Lucida Sans Unicode,Veranda,Lucida Grande,Lucida Sans;*/
+	font-family:Trebuchet MS,Tahoma,Verdana,Arial,sans-serif;
+
+	/*disable text selection*/
+	-webkit-user-select: none;
+	-khtml-user-select: none;
+	-moz-user-select: none;
+	-o-user-select: none;
+	user-select: none;
+
+	outline:none;
+}
+
+table, td, tr, thead, tfoot, tbody, th, tf {
+	table-layout:fixed;
+	border-collapse: collapse;
+	margin: 0px;
+	padding: 0px;
+	border:0;
+}
+
+a:focus, a:hover, a:active { outline:none } 
+
+:focus {outline:none;}
+::-moz-focus-inner {border:0;}
+
+.centerdiv {
+	margin-left: auto;
+	margin-right: auto;
+	display:block;
+}
+
+.centertext {
+	width: 480px;
+	height: 22px;
+	text-align: center;
+}
+
+
+</style>
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-7797548-7']);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+</head>
+<body onload="setupQlinqo()">
+	<div id="pageContainer" style="width:480px;height:710px;" class="centerdiv">
+	<div id="outerDiv" class="centerdiv" style="position: relative;width:480px;height:640px;">
+		<div id="canvasContainer" style="position: relative;"></div>
+		<div id="canvasMouseHitDetector" style="position: relative;width:480px;height:80px;z-Index:20;background-color:green;opacity:0;"></div>
+		<div id="canvasGameOverHitDetector" style="position: absolute;top:240px;left:180px;width:120px;height:160px;z-Index:21;background-color:green;opacity:0;"></div>
+	</div>
+	<div class="centerdiv centertext">
+		<a href="https://twitter.com/share" class="twitter-share-button" data-url="http://www.masteredsoftware.com/qlinqo/" data-text="Qlinqo - HTML5 Plinko Game" data-related="mpalmerlee" data-via="masteredsoft" data-lang="en">Tweet</a>
+		<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
+
+		<div class="g-plusone" data-size="medium" data-href="http://www.masteredsoftware.com/qlinqo/"></div>
+		<script type="text/javascript">
+		  (function() {
+			var po = document.createElement('script'); po.type = 'text/javascript'; po.async = true;
+			po.src = 'https://apis.google.com/js/plusone.js';
+			var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(po, s);
+		  })();
+		</script>
+
+		<div class="fb-like" data-href="http://www.masteredsoftware.com/qlinqo/" data-send="false" data-layout="button_count" data-width="50" data-show-faces="false" data-colorscheme="dark" data-font="trebuchet ms"></div>
+		<div id="fb-root"></div>
+		<script>(function(d, s, id) {
+		  var js, fjs = d.getElementsByTagName(s)[0];
+		  if (d.getElementById(id)) return;
+		  js = d.createElement(s); js.id = id;
+		  js.src = "//connect.facebook.net/en_US/all.js#xfbml=1";
+		  fjs.parentNode.insertBefore(js, fjs);
+		}(document, 'script', 'facebook-jssdk'));</script>
+	</div>
+	<div class="centerdiv centertext">Qlinqo - HTML5 Game by <a href="http://www.masteredsoftware.com">Mastered Software</a></span></div>
+	<div class="centerdiv centertext">Uses <a href="https://github.com/mpalmerlee/Stratiscape">Stratiscape</a> and <a href="http://code.google.com/p/box2dweb/">Box2dWeb</a></div>
+	</div>
+</body>
+</html>
